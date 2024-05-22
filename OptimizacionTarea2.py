@@ -39,7 +39,7 @@ def read_cvrp_instance(filename):
     return instance
 
 # Uso del código
-filename = r"C:\Users\sebas\Desktop\1s2024\opti\Facil.vrp"
+filename = r"C:\Users\sebas\Desktop\opti\Facil.vrp"
 
 instance = read_cvrp_instance(filename)
 
