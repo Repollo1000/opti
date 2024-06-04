@@ -1,5 +1,6 @@
 import math
 import random
+import matplotlib.pyplot as plt
 
 class CVRPInstance:
     def __init__(self):
@@ -68,24 +69,6 @@ print("Demandas de los nodos:", instance.demands)
 print("Nodo del depósito:", instance.depot_node)
 print("-----------------------------------")
 
-import matplotlib.pyplot as plt
-
-def plot_nodes(instance):
-    depot_coords = instance.node_coords[instance.depot_node]
-    other_coords = [coord for node, coord in instance.node_coords.items() if node != instance.depot_node]
-
-    plt.figure(figsize=(8, 6))
-    plt.scatter(*zip(*other_coords), color='blue', label='Nodos')
-    plt.scatter(*zip(depot_coords), color='red', label='Depósito')
-    plt.xlabel('Coordenada X')
-    plt.ylabel('Coordenada Y')
-    plt.title('Ubicación de los nodos')
-    plt.legend()
-    plt.grid(True)
-    plt.show()
-
-# Uso
-plot_nodes(instance)
 
 
 #Heuristica vecino mas cercano
@@ -152,13 +135,15 @@ print("La solución del vecino más cercano es:", solucionInicial)
 print("-----------------------------------")
 
 
-import matplotlib.pyplot as plt
-
 def plot_nodes_with_route(instance, routes):
     depot_coords = instance.node_coords[instance.depot_node]
     other_coords = [coord for node, coord in instance.node_coords.items() if node != instance.depot_node]
 
-    plt.figure(figsize=(8, 6))
+    plt.figure(figsize=(14, 6))  # Ajustamos el tamaño de la figura
+
+    # Primer gráfico: nodos y rutas
+    plt.subplot(1, 2, 1)
+    
     plt.scatter(*zip(*other_coords), color='blue', label='Nodos')
     plt.scatter(*zip(depot_coords), color='red', label='Depósito')
 
@@ -176,14 +161,23 @@ def plot_nodes_with_route(instance, routes):
     plt.title('Rutas iniciales del Vecino más cercano')
     plt.legend()
     plt.grid(True)
+
+    # Segundo gráfico: solo nodos
+    plt.subplot(1, 2, 2)
+    plt.scatter(*zip(*other_coords), color='blue', label='Nodos')
+    plt.scatter(*zip(depot_coords), color='red', label='Depósito')
+    plt.xlabel('Coordenada X')
+    plt.ylabel('Coordenada Y')
+    plt.title('Ubicación de los nodos')
+    plt.legend()
+    plt.grid(True)
+
+    plt.tight_layout()  # Ajustamos automáticamente la disposición de los gráficos para evitar superposiciones
     plt.show()
 
 # Uso
 plot_nodes_with_route(instance, solucionInicial)
 
-
-# Uso
-plot_nodes_with_route(instance, solucionInicial[0])  # Solo mostramos la primera ruta generada por la heurística
 
 
 #Calcular el costo de una ruta dada
@@ -199,25 +193,46 @@ def calcularCosto(instance, solucion ):
 
 #Generamos una solucion vecino con 2-opt
 
-def two_Opt(ruta):
-    mejorRuta = ruta
-    mejorCosto = calcularCosto(instance, ruta)
+#Generamos una solucion vecino con 2-opt
+
+def two_opt(route, instance):
+    # Calcula la distancia total de la ruta actual
+    def calculate_route_distance(route, instance):
+        total_distance = 0
+        for i in range(len(route) - 1):
+            node1 = route[i]
+            node2 = route[i + 1]
+            total_distance += distance(instance.node_coords[node1], instance.node_coords[node2])
+        return total_distance
+
+    best_distance = calculate_route_distance(route, instance)
     improved = True
 
     while improved:
         improved = False
-        for i in range(1, len(ruta)-2):
-            for j in range(i+1, len(ruta)-1):
-                if j-i == 1: continue #No intercambia aristas adyacentes
-                nuevaRuta = ruta[:i] + ruta[i:j+1][::-1] + ruta[j+1:]
-                nuevoCosto = calcularCosto(instance, nuevaRuta)
-                if nuevoCosto < mejorCosto:
-                    mejorRuta = nuevaRuta
-                    mejorCosto = nuevoCosto
+        for i in range(1, len(route) - 2):
+            for j in range(i + 1, len(route) - 1):
+                new_route = route[:i] + route[i:j + 1][::-1] + route[j + 1:]
+                new_distance = calculate_route_distance(new_route, instance)
+                if new_distance < best_distance:
+                    route = new_route
+                    best_distance = new_distance
                     improved = True
-                    ruta = mejorRuta  # Update the original route
-    return mejorRuta
-          
+        # Chequea si se ha mejorado la ruta para continuar iterando
+        if improved:
+            break
 
+    return route
+
+# Aplanar la lista de rutas para obtener una lista plana de nodos
+flatten_solution = [node for route in solucionInicial for node in route]
+
+# Aplicar 2-opt a la lista aplanada de nodos
+rutaof = two_opt(flatten_solution, instance)
+
+print("Ruta con 2-opt")
+print(rutaof)
+
+print(len(rutaof))
 
 
