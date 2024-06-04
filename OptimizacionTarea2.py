@@ -1,3 +1,5 @@
+import matplotlib.pyplot as plt
+
 class CVRPInstance:
     def __init__(self):
         self.name = None
@@ -32,14 +34,34 @@ def read_cvrp_instance(filename):
                     node_id, demand = map(int, line.split())
                     instance.demands[node_id] = demand
                 elif section == "DEPOT_SECTION":
-                    instance.depot_node = int(line)
-                else:
-                    key, value = line.split(":")
-                    setattr(instance, key.strip().lower(), value.strip())
+                    depot_info = line.split()
+                    if len(depot_info) > 0:
+                        instance.depot_node = int(depot_info[0])
     return instance
 
+def plot_cvrp_instance(instance):
+    depot_node = instance.depot_node
+    if depot_node == -1:  # Si el depósito está configurado como -1, buscar el nodo con demanda cero
+        for node, demand in instance.demands.items():
+            if demand == 0:
+                depot_node = node
+                break
+    depot_coords = instance.node_coords[depot_node]
+
+    plt.figure(figsize=(8, 8))
+    plt.scatter(*zip(*instance.node_coords.values()), color='b', label='Clientes')
+    plt.scatter(*depot_coords, color='r', label='Depósito')
+
+    plt.xlabel('Coordenada X')
+    plt.ylabel('Coordenada Y')
+    plt.title('Instancia CVRP: {}'.format(instance.name))
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+
+
 # Uso del código
-filename = r"C:\Users\sebas\Desktop\opti\Facil.vrp"
+filename = r"Dificil.vrp"
 
 instance = read_cvrp_instance(filename)
 
@@ -53,3 +75,8 @@ print("Tipo de peso de arista:", instance.edge_weight_type)
 print("Coordenadas de los nodos:", instance.node_coords)
 print("Demandas de los nodos:", instance.demands)
 print("Nodo del depósito:", instance.depot_node)
+
+
+
+plot_cvrp_instance(instance)
+
